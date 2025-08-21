@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<title>Google Drive Direct Link Generator</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+    textarea { width: 100%; height: 120px; margin-bottom: 10px; padding: 10px; }
+    button { padding: 8px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+    .generate { background: #28a745; color: white; }
+    .copy { background: #007bff; color: white; }
+    .go { background: #ff5722; color: white; }
+    .result { background: white; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    .link-item { margin: 8px 0; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<h2>Google Drive Direct Link Generator</h2>
+<p>একসাথে অনেকগুলো Google Drive লিংক Paste করে <b>Generate</b> চাপুন 👇</p>
+
+<textarea id="inputLinks" placeholder="এখানে আপনার Google Drive লিংকগুলো দিন..."></textarea>
+<br>
+<button class="generate" onclick="generateLinks()">Generate Direct Links</button>
+
+<div id="output"></div>
+
+<script>
+function generateLinks() {
+    const input = document.getElementById("inputLinks").value.trim();
+    const outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = "";
+
+    if (!input) {
+        alert("লিংক দিন!");
+        return;
+    }
+
+    const links = input.split(/\s+/); // এক বা একাধিক space/newline দিয়ে আলাদা করবে
+
+    links.forEach(link => {
+        const match = link.match(/[-\w]{25,}/); // file id ধরবে
+        if (match) {
+            const fileId = match[0];
+            const directLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+
+            const container = document.createElement("div");
+            container.className = "link-item";
+
+            const a = document.createElement("a");
+            a.href = directLink;
+            a.target = "_blank";
+            a.textContent = directLink;
+
+            const copyBtn = document.createElement("button");
+            copyBtn.textContent = "Copy";
+            copyBtn.className = "copy";
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(directLink);
+                copyBtn.textContent = "Copied!";
+                setTimeout(()=> copyBtn.textContent="Copy",1500);
+            };
+
+            const goBtn = document.createElement("button");
+            goBtn.textContent = "Go";
+            goBtn.className = "go";
+            goBtn.onclick = () => window.open(directLink, "_blank");
+
+            container.appendChild(a);
+            container.appendChild(copyBtn);
+            container.appendChild(goBtn);
+
+            outputDiv.appendChild(container);
+        }
+    });
+}
+</script>
+
+</body>
+</html>
