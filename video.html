@@ -2,73 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Koofr MP4 Chunk Player</title>
+  <title>Secure Streaming</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #111;
-    }
-    video {
-      width: 80%;
-      max-width: 720px;
-      border: 3px solid #0f0;
-      border-radius: 12px;
-      background: black;
-    }
+    body { display:flex; justify-content:center; align-items:center; height:100vh; background:#111; }
+    video { width:80%; max-width:800px; border:4px solid #444; border-radius:10px; }
   </style>
 </head>
 <body>
   <video id="player" controls autoplay></video>
 
   <script>
-    const MP4_URL = "https://app.koofr.net/content/links/b74cf534-9518-4709-8631-79356f476d63/files/get/VID_20250823_065754.mp4?path=%2F&force";
-    const CHUNK_SIZE = 1024 * 1024; // প্রতি chunk ~1MB
-    let start = 0;
+    async function loadVideo() {
+      const url = "https://app.koofr.net/content/links/b74cf534-9518-4709-8631-79356f476d63/files/get/VID_20250823_065754.mp4?path=%2F&force";
 
-    const video = document.getElementById("player");
-    const mediaSource = new MediaSource();
-    video.src = URL.createObjectURL(mediaSource);
+      // লিংক fetch করে blob বানানো
+      const response = await fetch(url);
+      const data = await response.blob();
 
-    mediaSource.addEventListener("sourceopen", async () => {
-      // codec detect করার চেষ্টা (auto)
-      let mime = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
-      if (!MediaSource.isTypeSupported(mime)) {
-        mime = 'video/mp4; codecs="avc1.64001E, mp4a.40.2"';
-      }
-      if (!MediaSource.isTypeSupported(mime)) {
-        mime = 'video/mp4'; // fallback
-      }
+      // Blob URL বানানো
+      const videoUrl = URL.createObjectURL(data);
 
-      const sourceBuffer = mediaSource.addSourceBuffer(mime);
+      // Video player এ বসানো
+      const player = document.getElementById("player");
+      player.src = videoUrl;
+    }
 
-      async function fetchChunk() {
-        const headers = { Range: `bytes=${start}-${start + CHUNK_SIZE - 1}` };
-        const resp = await fetch(MP4_URL, { headers });
-        const data = await resp.arrayBuffer();
-
-        if (data.byteLength > 0) {
-          sourceBuffer.appendBuffer(data);
-          start += CHUNK_SIZE;
-        } else {
-          mediaSource.endOfStream();
-          console.log("✅ সব chunk শেষ");
-        }
-      }
-
-      sourceBuffer.addEventListener("updateend", () => {
-        if (mediaSource.readyState === "open") {
-          fetchChunk();
-        }
-      });
-
-      fetchChunk(); // প্রথম chunk শুরু
-    });
-
-    // রাইট-ক্লিক ব্লক
-    video.addEventListener("contextmenu", e => e.preventDefault());
+    loadVideo();
   </script>
 </body>
 </html>
